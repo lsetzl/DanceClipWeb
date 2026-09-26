@@ -52,5 +52,6 @@ WebCodecs 方式で実用になる。同期・長さ・フェードは CLI版と
 - 映像の既定ビットレートは 14Mbps。ffmpeg.wasm は入れない
 - リポジトリは公開(`lsetzl/DanceClipWeb`)、GitHub Pages で配信
 - UI は日本語 + 英語(`src/i18n.ts`)。「〜のだ」口調はやめる
-- スマホ対応は、スマホでの書き出し速度を見てから決める
+- スマホ対応する(スマホでの書き出しは実時間の 1.6 倍速で実用範囲)
+- ライセンスは MIT。同梱ライブラリのライセンスは `public/THIRD_PARTY_LICENSES.txt` で表示する
 - `HANDOFF_WEB.md` は個人のパスを含むので git に入れない(ローカルにだけ置く)
