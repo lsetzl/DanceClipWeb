@@ -48,6 +48,10 @@ define(
     'sync.lockTitle': '再生位置の前後で、動きと曲がいちばん合う位置に寄せます(±半拍の範囲)(B)',
     'sync.marker': '目印',
     'sync.markerTitle': '再生位置に目印を置きます (M)。動画をドラッグすると目印が拍線に吸い付きます',
+    'sync.delMarker': '削除',
+    'sync.delMarkerTitle': '選んでいる目印を削除します (Delete)。目印はひし形をクリック / タップで選べます',
+    'marker.pickFirst': '削除する目印のひし形をタップ(クリック)して選んでください',
+    'marker.none': '目印がありません',
     'sync.bpm': 'BPM {bpm}(再生位置付近) 1拍 = {ms}ms',
     'sync.bpmPending': 'BPM 解析中…',
     'lock.notReady': '解析が終わるまで待ってください',
@@ -155,6 +159,7 @@ define(
     'help.cv': '動画を左 / 右へ 1拍',
     'help.b': '吸着(±半拍でいちばん合う位置へ)',
     'help.m': '再生位置に目印を置く',
+    'help.del': '選んでいる目印を削除',
     'help.io': 'トリムの開始 / 終了を現在位置に',
     'help.l': 'トリム範囲のループ切り替え',
     'help.f': 'フェード反映の切り替え',
@@ -164,9 +169,9 @@ define(
     'help.json': 'プロジェクト JSON の読み込み / 保存',
     'help.export': '書き出し',
     'help.timeline':
-      'タイムライン(マウス):\n・ホイール = 拡大縮小(マウス位置が中心)。横スクロールは下のバー、Shift+ホイール、中ボタンドラッグ\n・時間軸は曲に固定。全体図 / 目盛り / 曲レーンをクリック・ドラッグ = シーク\n・動画レーンを掴んで左右にドラッグ = 同期(Shift で 1/5 の細かさ)\n・青い縦棒 = トリムの端、上の黄色い丸 = フェードの長さ\n・目印(ピンク): ダブルクリックか M で追加、ひし形をドラッグで移動、線を右クリックで削除。動画のドラッグ中に拍線へ吸い付く(Alt で解除)',
+      'タイムライン(マウス):\n・ホイール = 拡大縮小(マウス位置が中心)。横スクロールは下のバー、Shift+ホイール、中ボタンドラッグ\n・時間軸は曲に固定。全体図 / 目盛り / 曲レーンをクリック・ドラッグ = シーク\n・動画レーンを掴んで左右にドラッグ = 同期(Shift で 1/5 の細かさ)\n・青い縦棒 = トリムの端、上の黄色い丸 = フェードの長さ\n・目印(ピンク): ダブルクリックか M で追加。ひし形をクリックで選択、ドラッグで移動。選んで「削除」か Delete キー、または線を右クリックで削除。動画のドラッグ中に拍線へ吸い付く(Alt で解除)',
     'help.touch':
-      'タッチ操作:\n・2本指で広げる / 狭める = 拡大縮小、2本指で左右 = スクロール\n・動画レーンを1本指で左右 = 同期\n・動画レーンをダブルタップ = 目印を追加、目印の線を長押し = 削除',
+      'タッチ操作:\n・2本指で広げる / 狭める = 拡大縮小、2本指で左右 = スクロール\n・動画レーンを1本指で左右 = 同期\n・動画レーンをダブルタップ = 目印を追加\n・目印のひし形をタップ = 選択(白い枠)、そのままドラッグ = 移動、下の「削除」= 選んだ目印を削除',
   },
   {
     'top.video': 'Video',
@@ -215,6 +220,10 @@ define(
     'sync.lockTitle': 'Move the video to where motion and music match best around the playhead (within ±half a beat) (B)',
     'sync.marker': 'Marker',
     'sync.markerTitle': 'Add a marker at the playhead (M). Markers snap to beat lines while you drag the video',
+    'sync.delMarker': 'Delete',
+    'sync.delMarkerTitle': 'Delete the selected marker (Delete). Click or tap a marker’s diamond to select it',
+    'marker.pickFirst': 'Tap (click) a marker’s diamond to select the one to delete',
+    'marker.none': 'There are no markers',
     'sync.bpm': 'BPM {bpm} (near playhead)  1 beat = {ms}ms',
     'sync.bpmPending': 'Analyzing BPM…',
     'lock.notReady': 'Please wait until the analysis finishes',
@@ -322,6 +331,7 @@ define(
     'help.cv': 'Move video left / right 1 beat',
     'help.b': 'Snap (best match within ±half a beat)',
     'help.m': 'Add a marker at the playhead',
+    'help.del': 'Delete the selected marker',
     'help.io': 'Set trim start / end at the playhead',
     'help.l': 'Toggle loop of the trimmed range',
     'help.f': 'Toggle fade preview',
@@ -331,8 +341,8 @@ define(
     'help.json': 'Open / save project JSON',
     'help.export': 'Export',
     'help.timeline':
-      'Timeline (mouse):\n• Wheel = zoom around the cursor. Scroll with the bar below, Shift+wheel, or middle-button drag\n• The time axis follows the song. Click or drag the overview, ruler or song lane to seek\n• Drag the video lane left/right to sync (hold Shift for 1/5 speed)\n• Blue bars = trim edges, yellow dots = fade lengths\n• Markers (pink): double-click or M to add, drag the diamond to move, right-click the line to delete. They snap to beat lines while you drag the video (hold Alt to disable)',
+      'Timeline (mouse):\n• Wheel = zoom around the cursor. Scroll with the bar below, Shift+wheel, or middle-button drag\n• The time axis follows the song. Click or drag the overview, ruler or song lane to seek\n• Drag the video lane left/right to sync (hold Shift for 1/5 speed)\n• Blue bars = trim edges, yellow dots = fade lengths\n• Markers (pink): double-click or M to add. Click the diamond to select, drag it to move. Delete the selected one with “Delete” or the Delete key, or right-click its line. They snap to beat lines while you drag the video (hold Alt to disable)',
     'help.touch':
-      'Touch:\n• Pinch = zoom, two-finger swipe = scroll\n• Drag the video lane with one finger to sync\n• Double-tap the video lane to add a marker, long-press a marker line to delete it',
+      'Touch:\n• Pinch = zoom, two-finger swipe = scroll\n• Drag the video lane with one finger to sync\n• Double-tap the video lane to add a marker\n• Tap a marker’s diamond to select it (white outline), drag to move, tap “Delete” below to remove it',
   },
 );

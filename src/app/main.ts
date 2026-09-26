@@ -1,7 +1,7 @@
 import '../messages';
 import './messages';
 import { applyI18n, lang, setLang, t, type Lang } from '../i18n';
-import { addMarker, beatLock, changed, clampFades, nudge, setIn, setOut, setTrim } from './actions';
+import { addMarker, beatLock, changed, clampFades, deleteSelectedMarker, nudge, setIn, setOut, setTrim } from './actions';
 import { cancelRender, checkSupport, startRender } from './exporter';
 import { classify, exportProjectJson, handleDrop, importProjectJson, openAudio, openVideo, pickFile, renderRecent, type Picked } from './media';
 import { currentSongTime, currentVideoTime, P } from './player';
@@ -74,6 +74,7 @@ function onKey(e: KeyboardEvent) {
     case 'KeyV': nudge(beatMs()); break;
     case 'KeyB': beatLock(); break;
     case 'KeyM': addMarker(currentVideoTime()); break;
+    case 'Delete': case 'Backspace': deleteSelectedMarker(); break;
     case 'KeyI': setIn(); break;
     case 'KeyO': setOut(); break;
     case 'KeyL': $('#chkLoop').click(); break;
@@ -133,7 +134,17 @@ function wire() {
     await renderRecent();
     $('#recentMenu').classList.toggle('open');
   };
-  document.addEventListener('click', () => $('#recentMenu').classList.remove('open'));
+  $('#btnMore').onclick = (e) => {
+    e.stopPropagation();
+    $('#topTools').classList.toggle('open');
+  };
+  $('#topTools').addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('select, .dropdown')) e.stopPropagation();
+  });
+  document.addEventListener('click', () => {
+    $('#recentMenu').classList.remove('open');
+    $('#topTools').classList.remove('open');
+  });
   $('#btnHelp').onclick = () => $('#help').classList.remove('hidden');
   $('#btnHelpClose').onclick = () => $('#help').classList.add('hidden');
   const langSel = $<HTMLSelectElement>('#lang');
@@ -169,7 +180,9 @@ function wire() {
     changed({ sync: true });
   });
   $('#btnLock').onclick = beatLock;
-  $('#btnMarker').onclick = () => ready() && addMarker(currentVideoTime());
+  $('#btnMarker').onclick = $('#qMarker').onclick = () => ready() && addMarker(currentVideoTime());
+  $('#btnDelMarker').onclick = $('#qDelMarker').onclick = () => ready() && deleteSelectedMarker();
+  $('#qLock').onclick = beatLock;
   $('#btnSetIn').onclick = () => ready() && setIn();
   $('#btnSetOut').onclick = () => ready() && setOut();
   $('#btnZoomSong').onclick = viewSong;

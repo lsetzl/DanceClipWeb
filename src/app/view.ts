@@ -16,6 +16,9 @@ export function updateTransport() {
   $('#btnPlay').textContent = P.mode === 'linked' ? '❚❚' : '▶';
 }
 
+// 回転の選択肢と同じく、ffmpeg の表記(反時計回り)の角度
+export const tagCcw = () => (360 - (S.vInfo?.rotation ?? 0)) % 360;
+
 // 回転タグ(時計回り)は <video> が自動で反映する。上書き(ffmpeg と同じ反時計回りの値)との差だけ CSS で回す
 export function rotationCss() {
   if (!S.p || S.p.rotation == null || !S.vInfo) return 0;
@@ -23,14 +26,26 @@ export function rotationCss() {
   return (((wantCw - S.vInfo.rotation) % 360) + 360) % 360;
 }
 
+const narrow = window.matchMedia('(max-width: 900px)');
+narrow.addEventListener('change', () => layoutVideo());
+window.addEventListener('resize', () => layoutVideo());
+
 export function layoutVideo() {
   const stage = $('#stage');
-  const W = stage.clientWidth, H = stage.clientHeight;
   let vw = video.videoWidth, vh = video.videoHeight;
   if (!vw || !vh) return;
   const r = rotationCss();
   const swap = r % 180 !== 0;
   const visW = swap ? vh : vw, visH = swap ? vw : vh;
+  // スマホでは枠の高さを動画の縦横比に合わせる(縦動画は画面の高さの 40% まで)
+  if (narrow.matches && $('#welcome').classList.contains('hidden')) {
+    stage.style.aspectRatio = 'auto';
+    stage.style.height = `${Math.round(Math.min((stage.clientWidth * visH) / visW, window.innerHeight * 0.4))}px`;
+  } else {
+    stage.style.aspectRatio = '';
+    stage.style.height = '';
+  }
+  const W = stage.clientWidth, H = stage.clientHeight;
   const s = Math.min(W / visW, H / visH);
   vw *= s;
   vh *= s;
@@ -64,7 +79,7 @@ export function updatePanels() {
   setInput('#inFadeIn', p.fade.in_ms);
   setInput('#inFadeOut', p.fade.out_ms);
   $<HTMLSelectElement>('#selRotation').value = p.rotation == null ? 'auto' : String(p.rotation);
-  $('#rotInfo').textContent = p.rotation == null ? t('rot.keepTag', { deg: S.vInfo?.rotation ?? 0 }) : t('rot.override');
+  $('#rotInfo').textContent = p.rotation == null ? t('rot.keepTag', { deg: tagCcw() }) : t('rot.override');
   S.dirty = true;
 }
 
@@ -75,7 +90,7 @@ export function updateSourceInfo() {
   if (v && S.videoFile) {
     $('#videoName').textContent = S.videoFile.name;
     $('#videoInfo').textContent =
-      `${v.width}x${v.height} ${v.fps.toFixed(0)}fps ${v.codec ?? ''} ${fmt(S.vDur)}` + (v.rotation ? ` ${t('src.rotTag', { deg: v.rotation })}` : '');
+      `${v.width}x${v.height} ${v.fps.toFixed(0)}fps ${v.codec ?? ''} ${fmt(S.vDur)}` + (v.rotation ? ` ${t('src.rotTag', { deg: tagCcw() })}` : '');
   }
   if (S.buffer && S.audioFile) {
     $('#audioName').textContent = S.audioFile.name;

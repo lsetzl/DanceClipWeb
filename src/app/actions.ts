@@ -147,10 +147,24 @@ export function addMarker(tv: number) {
   if (S.p.markers.some((m) => Math.abs(m - ms) < 30)) return;
   S.p.markers.push(ms);
   S.p.markers.sort((a, b) => a - b);
+  S.selMarkerMs = ms;
   changed();
 }
 
 export function removeMarker(i: number) {
+  if (S.p!.markers[i] === S.selMarkerMs) S.selMarkerMs = null;
   S.p!.markers.splice(i, 1);
   changed();
+}
+
+export function selectMarker(i: number | null) {
+  S.selMarkerMs = i == null ? null : S.p!.markers[i] ?? null;
+  S.dirty = true;
+}
+
+export function deleteSelectedMarker() {
+  if (!S.p) return;
+  const i = S.selMarkerMs == null ? -1 : S.p.markers.indexOf(S.selMarkerMs);
+  if (i < 0) return toast(t(S.p.markers.length ? 'marker.pickFirst' : 'marker.none'), 'warn');
+  removeMarker(i);
 }

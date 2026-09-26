@@ -35,6 +35,9 @@ a { color: #9ab8d8; }
 .row.center { justify-content: center; }
 
 #topbar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+#topTools { display: flex; align-items: center; gap: 10px; }
+#btnMore, .menuLinks, #quickBar { display: none; }
+#stageStatus { position: absolute; left: 10px; bottom: 10px; padding: 2px 8px; border-radius: 4px; background: #000b; color: var(--accent2); font-size: 12px; pointer-events: none; }
 .brand { font-weight: 700; letter-spacing: .5px; color: var(--accent); margin-right: 6px; }
 .src { display: flex; gap: 8px; align-items: center; min-width: 0; max-width: 30%; }
 .srcText { min-width: 0; }
@@ -122,23 +125,40 @@ body.dragging #welcome { border-color: var(--accent); }
   html, body { overflow: auto; height: auto; }
   body { display: flex; flex-direction: column; min-height: 100dvh; }
   #main, #left { display: contents; }
-  #topbar { order: 0; gap: 6px; }
+  #topbar { order: 0; gap: 6px; flex-wrap: nowrap; position: sticky; top: 0; z-index: 40; padding: 4px 8px; }
+  .brand { display: none; }
+  .src { max-width: none; flex: 1 1 0; gap: 4px; }
+  .srcInfo, .saveState { display: none; }
+  .srcName { font-size: 12px; }
+  #btnMore { display: block; font-size: 16px; padding: 4px 12px; }
+  #topTools { display: none; position: absolute; z-index: 150; right: 8px; top: calc(100% + 4px); flex-direction: column; align-items: stretch;
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-shadow: 0 8px 24px #0009; min-width: 200px; }
+  #topTools.open { display: flex; }
+  #topTools .menu { position: static; width: auto; margin-top: 6px; max-height: 45vh; }
+  .menuLinks { display: block; text-align: center; font-size: 12px; margin-top: 4px; }
   #supportWarn { order: 0; }
   #stage { order: 1; flex: none; aspect-ratio: 16 / 9; min-height: 0; }
-  #transport { order: 2; }
-  #timelines { order: 3; }
+  #transport { order: 2; gap: 6px; padding: 4px 8px; }
+  #timelines { order: 3; padding: 4px 8px 8px; }
   #side { order: 4; border-left: none; overflow: visible; }
-  #statusbar { order: 5; }
-  .src { max-width: none; flex: 1 1 40%; }
-  .saveState { display: none; }
+  #statusbar { display: none; }
   #welcome { margin: 6px; }
   #welcome h1 { font-size: 16px; }
   body:has(#welcome:not(.hidden)) #stage { aspect-ratio: auto; height: 75dvh; }
-  .times { min-width: 0; }
-  .vol { display: none; }
-  .tlHint { display: none; }
-  #cvMain { height: 220px; }
+  .times { min-width: 0; font-size: 11px; }
+  .times .lbl { width: 32px; }
+  .vol, #driftInfo, .tlHint { display: none; }
+  .toggle { font-size: 12px; }
+  #cvMain { height: 200px; }
   button, .button { padding: 6px 10px; }
+  .tlHead { margin-bottom: 4px; }
   .tlHead button { padding: 4px 10px; }
+  #timelines { position: relative; }
+  #dragInfo { position: absolute; left: 8px; right: 8px; top: 4px; z-index: 5; background: #000d; padding: 6px 8px; border-radius: 6px; pointer-events: none; }
+  #dragInfo:empty { display: none; }
   #tlScroll { height: 18px; }
+  #toasts { top: 56px; bottom: auto; left: 8px; right: 8px; align-items: stretch; }
+  #quickBar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+  #quickBar button { padding: 9px 0; min-width: 0; font-size: 13px; }
+  #side .btnrow, #side .syncBtns { display: none; }
 }

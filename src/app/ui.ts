@@ -19,6 +19,8 @@ export function toast(msg: string, kind: '' | 'warn' | 'error' | 'ok' = '', ms =
 
 export function status(msg = '') {
   $('#statusText').textContent = msg;
+  $('#stageStatus').textContent = msg;
+  $('#stageStatus').classList.toggle('hidden', !msg);
 }
 
 export function loading(msg: string | null) {

@@ -88,6 +88,7 @@ async function probe(file: File): Promise<VideoInfo & { canDecode: boolean }> {
 
 export function hideWelcome() {
   $('#welcome').classList.add('hidden');
+  layoutVideo();
 }
 
 async function loadVideo(file: File, handle: FileSystemFileHandle | null, { keepProject = false } = {}) {
@@ -122,7 +123,7 @@ async function loadVideo(file: File, handle: FileSystemFileHandle | null, { keep
     layoutVideo();
     loadVideoSignals(file);
     if (!info.canDecode) toast(t('warn.cannotExport', { codec: info.codec ?? '?' }), 'warn', 10000);
-    if (info.rotation) toast(t('warn.rotTag', { deg: info.rotation }), 'warn', 7000);
+    if (info.rotation) toast(t('warn.rotTag', { deg: (360 - info.rotation) % 360 }), 'warn', 7000);
   } finally {
     loading(null);
   }

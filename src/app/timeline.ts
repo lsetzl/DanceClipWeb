@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import { addMarker, changed, removeMarker, setTrim } from './actions';
+import { addMarker, changed, removeMarker, selectMarker, setTrim } from './actions';
 import { currentSongTime, P } from './player';
 import { clamp, MIN_TRIM_MS, offsetS, PEAK_HZ, ready, S, SNAP_PX, trimS, videoPosMs } from './state';
 import { $, fmt } from './ui';
@@ -193,16 +193,23 @@ function drawMarkers(g: CanvasRenderingContext2D, w: number, L: Lanes) {
     const x = xvOf(m / 1000, w);
     if (x < -8 || x > w + 8) return;
     const hot = snapped === i;
-    vline(g, x, L.SY, L.VY + L.VH - 12, hot ? '#ffffff' : COL.marker, hot ? 2 : 1.5);
+    const sel = m === S.selMarkerMs;
+    vline(g, x, L.SY, L.VY + L.VH - 12, hot ? '#ffffff' : COL.marker, hot || sel ? 2.5 : 1.5);
     const y = markerKnobY(L);
+    const r = sel ? 9 : 7;
     g.fillStyle = hot ? '#ffffff' : COL.marker;
     g.beginPath();
-    g.moveTo(x, y - 7);
-    g.lineTo(x + 6, y);
-    g.lineTo(x, y + 7);
-    g.lineTo(x - 6, y);
+    g.moveTo(x, y - r);
+    g.lineTo(x + r - 1, y);
+    g.lineTo(x, y + r);
+    g.lineTo(x - r + 1, y);
     g.closePath();
     g.fill();
+    if (sel) {
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 2;
+      g.stroke();
+    }
   });
 }
 
@@ -535,6 +542,7 @@ function bindMain() {
       markerIdx: kind === 'marker' ? markerAt(p, 9 * tolScale) : -1, pointerId: e.pointerId,
     };
     if (kind === 'video') c.style.cursor = 'grabbing';
+    if (kind === 'marker') selectMarker(TL.dragging.markerIdx);
     mainMove(e);
   });
   c.addEventListener('pointermove', (e) => {
@@ -612,7 +620,9 @@ function endDrag() {
   $('#tlThumb').classList.remove('drag');
   if (d.kind === 'video' && d.moved) changed({ sync: true });
   if (d.kind === 'marker') {
+    const moved = S.p!.markers[d.markerIdx];
     S.p!.markers.sort((a, b) => a - b);
+    if (moved != null) S.selMarkerMs = moved;
     changed();
   }
   setTimeout(() => showDragInfo(''), 1200);
@@ -671,6 +681,7 @@ function mainMove(e: PointerEvent) {
       if (d.markerIdx < 0) break;
       const ms = Math.round(clamp(tv, 0, S.vDur) * 1000);
       pr.markers[d.markerIdx] = ms;
+      S.selMarkerMs = ms;
       changed();
       showDragInfo(t('drag.marker', { t: fmt(ms / 1000) }));
       break;

@@ -180,6 +180,8 @@ export async function exportClip(
     if (gain >= 1) {
       out = s;
     } else {
+      // 回転は出力のメタデータで付けるので、ここではタグを反映させずに元の向きのまま描く
+      s.setRotation(0);
       s.draw(ctx, 0, 0, w, h);
       ctx.fillStyle = `rgba(0,0,0,${1 - gain})`;
       ctx.fillRect(0, 0, w, h);

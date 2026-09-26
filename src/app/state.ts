@@ -56,6 +56,7 @@ export const S = {
   loop: false,
   fadePreview: true,
   rendering: false,
+  selMarkerMs: null as number | null,
   dirty: true,
 };
 
