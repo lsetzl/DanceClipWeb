@@ -1,5 +1,6 @@
 import { canEncodeAudio, canEncodeVideo } from 'mediabunny';
 import { decodeSong, exportClip, probeVideo, type ClipParams, type EncodeOptions } from './export';
+import { measureAacDelay } from './audioDelay';
 import { applyI18n, define, lang, setLang, t, type Lang } from './i18n';
 import './messages';
 
@@ -22,6 +23,8 @@ define(
     'poc.start': '書き出し開始: {name}({w}x{h}、{codec}、{len}秒ぶん)',
     'poc.done': '完了: {sec}秒(実時間の {ratio} 倍速)、{frames} フレーム、{mb}MB',
     'poc.failed': '失敗: {msg}',
+    'poc.diag': '診断',
+    'poc.diagRun': '音声の遅延を測る',
   },
   {
     'poc.title': 'DanceClip Web — Export test',
@@ -41,6 +44,8 @@ define(
     'poc.start': 'Exporting: {name} ({w}x{h}, {codec}, {len}s)',
     'poc.done': 'Done: {sec}s ({ratio}x real time), {frames} frames, {mb}MB',
     'poc.failed': 'Failed: {msg}',
+    'poc.diag': 'Diagnostics',
+    'poc.diagRun': 'Measure audio delay',
   },
 );
 
@@ -103,6 +108,24 @@ $('#run').addEventListener('click', async () => {
   }
 });
 $('#cancel').addEventListener('click', () => abort?.abort());
+
+$('#diag').addEventListener('click', async () => {
+  try {
+    for (const sr of [44100, 48000]) {
+      const d = await measureAacDelay(sr);
+      log(`AAC encoder delay @${sr}Hz: ${d} samples (${((d / sr) * 1000).toFixed(1)}ms)`);
+    }
+    const ctx = new AudioContext();
+    await ctx.resume();
+    await new Promise((r) => setTimeout(r, 500));
+    const ts = ctx.getOutputTimestamp();
+    const viaTs = ts.contextTime != null && ts.performanceTime != null ? (ctx.currentTime - ts.contextTime - (performance.now() - ts.performanceTime) / 1000) * 1000 : NaN;
+    log(`AudioContext: sampleRate=${ctx.sampleRate} baseLatency=${(ctx.baseLatency * 1000).toFixed(1)}ms outputLatency=${((ctx.outputLatency ?? NaN) * 1000).toFixed(1)}ms outputTimestamp-lag=${viaTs.toFixed(1)}ms`);
+    await ctx.close();
+  } catch (e) {
+    log(t('poc.failed', { msg: e instanceof Error ? e.message : String(e) }));
+  }
+});
 
 const langSel = $<HTMLSelectElement>('#lang');
 langSel.value = lang;
