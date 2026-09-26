@@ -1,0 +1,6 @@
+node_modules/
+dist/
+poc-out/
+__pycache__/
+*.local.json
+HANDOFF_WEB.md
