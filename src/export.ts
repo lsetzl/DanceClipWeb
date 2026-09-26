@@ -11,6 +11,7 @@ import {
   VideoSampleSink,
   VideoSampleSource,
   type Rotation,
+  type Target,
 } from 'mediabunny';
 import { t } from './i18n';
 
@@ -35,7 +36,7 @@ export interface ExportProgress {
 }
 
 export interface ExportResult {
-  buffer: ArrayBuffer;
+  buffer: ArrayBuffer | null;
   frames: number;
   seconds: number;
   timings: Record<string, number>;
@@ -118,6 +119,7 @@ export async function exportClip(
   opts: EncodeOptions = {},
   onProgress?: (e: ExportProgress) => void,
   signal?: AbortSignal,
+  target: Target = new BufferTarget(),
 ): Promise<ExportResult> {
   const t0 = performance.now();
   const timings: Record<string, number> = {};
@@ -157,8 +159,8 @@ export async function exportClip(
   });
 
   const output = new Output({
-    format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
-    target: new BufferTarget(),
+    format: new Mp4OutputFormat({ fastStart: target instanceof BufferTarget ? 'in-memory' : false }),
+    target,
   });
   const rotation = p.rotation == null ? track.rotation : toCwRotation(p.rotation);
   output.addVideoTrack(videoSource, { rotation });
@@ -170,9 +172,10 @@ export async function exportClip(
   let prev: VideoSample | null = null;
 
   const emit = async (s: VideoSample, nextTs: number) => {
-    const tOut = frames === 0 ? 0 : s.timestamp - startS;
+    const srcTs = s.timestamp;
+    const tOut = frames === 0 ? 0 : srcTs - startS;
     const dur = Math.max(1e-3, nextTs - startS - tOut);
-    const gain = fadeGainAt(s.timestamp - startS, durS, finS, foutS);
+    const gain = fadeGainAt(srcTs - startS, durS, finS, foutS);
     let out: VideoSample;
     if (gain >= 1) {
       out = s;
@@ -189,7 +192,7 @@ export async function exportClip(
     await videoSource.add(out);
     out.close();
     frames++;
-    onProgress?.({ fraction: Math.min(1, (s.timestamp - startS) / durS), frames });
+    onProgress?.({ fraction: Math.min(1, Math.max(0, (srcTs - startS) / durS)), frames });
   };
 
   try {
@@ -220,6 +223,6 @@ export async function exportClip(
     input.dispose();
   }
   timings.total = performance.now() - t0;
-  const buffer = (output.target as BufferTarget).buffer!;
+  const buffer = target instanceof BufferTarget ? target.buffer : null;
   return { buffer, frames, seconds: timings.total / 1000, timings };
 }

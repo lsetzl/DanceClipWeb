@@ -60,4 +60,10 @@ function localTestFiles(): Plugin {
 export default defineConfig({
   base: './',
   plugins: [localTestFiles()],
+  worker: { format: 'es' },
+  build: {
+    rollupOptions: {
+      input: { main: resolve(__dirname, 'index.html'), poc: resolve(__dirname, 'poc.html') },
+    },
+  },
 });

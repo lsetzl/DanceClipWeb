@@ -1,52 +1,199 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DanceClip Web — Export test</title>
-  <style>
-    :root { color-scheme: dark; }
-    body { font: 15px system-ui, sans-serif; background: #1b1d22; color: #e6e6e6; margin: 0; padding: 16px; max-width: 760px; }
-    h1 { font-size: 20px; margin: 0 0 4px; }
-    .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    *, *::before, *::after { box-sizing: border-box; }
-    fieldset { border: 1px solid #444; border-radius: 6px; margin: 0 0 12px; min-width: 0; }
-    label { display: block; margin: 6px 0; }
-    input[type=number] { width: 90px; }
-    input[type=file] { max-width: 100%; }
-    textarea { width: 100%; height: 90px; background: #111; color: #ddd; box-sizing: border-box; }
-    button { font-size: 16px; padding: 8px 16px; }
-    progress { width: 100%; height: 18px; margin: 8px 0; }
-    pre { background: #111; padding: 8px; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
-    .muted { color: #999; font-size: 13px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Sync a silent dance video with a song, trim, fade and export MP4 — entirely in your browser.">
+<title>DanceClip</title>
+<link rel="stylesheet" href="/src/app/style.css">
 </head>
 <body>
-  <div class="top">
-    <h1 data-i18n="poc.title"></h1>
-    <select id="lang"><option value="ja">日本語</option><option value="en">English</option></select>
+<header id="topbar">
+  <div class="brand">DanceClip</div>
+  <div class="src">
+    <button id="btnPickVideo" data-i18n="top.video"></button>
+    <div class="srcText"><div class="srcName" id="videoName"></div><div class="srcInfo" id="videoInfo"></div></div>
   </div>
-  <p class="muted" data-i18n="poc.lead"></p>
-  <fieldset>
-    <legend data-i18n="poc.files"></legend>
-    <label><span data-i18n="poc.video"></span> <input id="video" type="file" accept="video/*"></label>
-    <label><span data-i18n="poc.audio"></span> <input id="audio" type="file" accept="audio/*,.m4a,.mp3"></label>
-  </fieldset>
-  <fieldset>
-    <legend data-i18n="poc.settings"></legend>
-    <label><span data-i18n="poc.length"></span> <input id="len" type="number" value="30" min="1" step="1"></label>
-    <label><span data-i18n="poc.bitrate"></span> <input id="vbr" type="number" value="14" step="1"></label>
-    <details>
-      <summary data-i18n="poc.advanced"></summary>
-      <p class="muted" data-i18n="poc.jsonHelp"></p>
-      <textarea id="json" placeholder='{"video_ref_ms":40850,"audio_ref_ms":53500,"trim":{"start_ms":40000,"end_ms":86000},"fade":{"in_ms":1000,"out_ms":1000},"rotation":null}'></textarea>
-    </details>
-  </fieldset>
-  <button id="run" data-i18n="poc.run"></button>
-  <button id="cancel" disabled data-i18n="poc.cancel"></button>
-  <progress id="prog" max="1" value="0"></progress>
-  <pre id="log"></pre>
-  <p class="muted"><a href="https://github.com/lsetzl/DanceClipWeb" style="color:#9ab">GitHub</a> · MIT · <a href="THIRD_PARTY_LICENSES.txt" style="color:#9ab">Third-party licenses</a></p>
-  <script type="module" src="/src/poc.ts"></script>
+  <div class="src">
+    <button id="btnPickAudio" data-i18n="top.audio"></button>
+    <div class="srcText"><div class="srcName" id="audioName"></div><div class="srcInfo" id="audioInfo"></div></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="saveState" id="saveState"></div>
+  <div class="dropdown">
+    <button id="btnRecent" data-i18n="top.recent"></button>
+    <div class="menu" id="recentMenu"></div>
+  </div>
+  <button id="btnImport" data-i18n="top.import" data-i18n-title="top.importTitle"></button>
+  <button id="btnExportJson" data-i18n="top.exportJson" data-i18n-title="top.exportJsonTitle"></button>
+  <select id="lang" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select>
+  <button id="btnHelp" data-i18n-title="top.help">?</button>
+</header>
+
+<div id="supportWarn" class="hidden"></div>
+
+<main id="main">
+  <section id="left">
+    <div id="stage">
+      <video id="video" muted playsinline preload="auto"></video>
+      <div id="fadeOverlay"></div>
+      <div id="stageBadge"></div>
+      <div id="welcome">
+        <h1 data-i18n="welcome.title"></h1>
+        <p data-i18n="welcome.body"></p>
+        <div class="row center">
+          <button id="welcomeVideo" class="accent" data-i18n="welcome.pickVideo"></button>
+          <button id="welcomeAudio" class="accent" data-i18n="welcome.pickAudio"></button>
+        </div>
+        <p class="dim small" data-i18n="welcome.privacy"></p>
+        <div class="welcomeRecentHead dim small" data-i18n="welcome.recent"></div>
+        <div id="welcomeRecent"></div>
+      </div>
+      <div id="loading" class="hidden"><div class="spinner"></div><span id="loadingText"></span></div>
+    </div>
+    <div id="transport">
+      <button id="btnPlay" class="big" data-i18n-title="tr.play">▶</button>
+      <select id="selRate" data-i18n-title="tr.rate">
+        <option value="1">1x</option>
+        <option value="0.75">0.75x</option>
+        <option value="0.5">0.5x</option>
+        <option value="0.25">0.25x</option>
+      </select>
+      <div class="times">
+        <div><span class="lbl" data-i18n="tr.video"></span><span id="tVideo" class="mono">0:00.000</span><span class="dim mono" id="tVideoDur"></span></div>
+        <div><span class="lbl" data-i18n="tr.song"></span><span id="tSong" class="mono">0:00.000</span><span class="dim mono" id="tSongDur"></span></div>
+      </div>
+      <label class="toggle" data-i18n-title="tr.loopTitle"><input type="checkbox" id="chkLoop"><span data-i18n="tr.loop"></span></label>
+      <label class="toggle" data-i18n-title="tr.fadeTitle"><input type="checkbox" id="chkFade" checked><span data-i18n="tr.fade"></span></label>
+      <div class="spacer"></div>
+      <span class="dim mono" id="driftInfo" data-i18n-title="tr.driftTitle"></span>
+      <label class="vol"><span data-i18n="tr.volume"></span><input type="range" id="volume" min="0" max="1" step="0.01" value="0.8"></label>
+    </div>
+  </section>
+
+  <aside id="side">
+    <div class="panel">
+      <h2><span data-i18n="sync.title"></span> <span class="dim small" data-i18n="sync.hint"></span></h2>
+      <div class="row">
+        <div class="offsetBig"><input type="number" id="inOffset" step="10" class="mono" data-i18n-title="sync.offsetTitle"><span class="unit">ms</span></div>
+      </div>
+      <div class="dim small" id="offsetDesc"></div>
+      <div class="row btnrow">
+        <button data-nudge="-beat" title="C" data-i18n="sync.minusBeat"></button>
+        <button data-nudge="-50" title="Shift+Z">−50</button>
+        <button data-nudge="-10" title="Z">−10</button>
+        <button data-nudge="10" title="X">+10</button>
+        <button data-nudge="50" title="Shift+X">+50</button>
+        <button data-nudge="beat" title="V" data-i18n="sync.plusBeat"></button>
+      </div>
+      <div class="row">
+        <button id="btnLock" class="accent" data-i18n="sync.lock" data-i18n-title="sync.lockTitle"></button>
+        <button id="btnMarker" data-i18n="sync.marker" data-i18n-title="sync.markerTitle"></button>
+      </div>
+      <div class="dim small" id="bpmInfo"></div>
+    </div>
+
+    <div class="panel">
+      <h2><span data-i18n="trim.title"></span> <span class="dim small" id="trimDur"></span></h2>
+      <div class="grid2">
+        <label><span data-i18n="trim.start"></span><input type="number" id="inStart" step="100"></label>
+        <label><span data-i18n="trim.end"></span><input type="number" id="inEnd" step="100"></label>
+        <button id="btnSetIn" data-i18n="trim.setIn" title="I"></button>
+        <button id="btnSetOut" data-i18n="trim.setOut" title="O"></button>
+        <label><span data-i18n="trim.fadeIn"></span><input type="number" id="inFadeIn" step="100" min="0"></label>
+        <label><span data-i18n="trim.fadeOut"></span><input type="number" id="inFadeOut" step="100" min="0"></label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 data-i18n="rot.title"></h2>
+      <select id="selRotation">
+        <option value="auto" data-i18n="rot.auto"></option>
+        <option value="0" data-i18n="rot.zero"></option>
+        <option value="90">90°</option>
+        <option value="180">180°</option>
+        <option value="270">270°</option>
+      </select>
+      <div class="dim small" id="rotInfo"></div>
+    </div>
+
+    <div class="panel">
+      <h2 data-i18n="export.title"></h2>
+      <div class="dim small" data-i18n="export.format"></div>
+      <div class="row">
+        <button id="btnRender" class="accent" data-i18n="export.button" data-i18n-title="export.buttonTitle"></button>
+      </div>
+      <div id="renderBox" class="hidden">
+        <div class="progress"><div id="renderBar"></div></div>
+        <div class="row small"><span id="renderText" class="mono"></span><div class="spacer"></div><button id="btnRenderCancel" data-i18n="btn.cancel"></button></div>
+        <div class="dim small" data-i18n="export.keepVisibleHint"></div>
+      </div>
+      <div id="renderDone" class="hidden">
+        <div class="small" id="renderDoneText"></div>
+        <a id="btnDownload" class="button hidden" data-i18n="export.download"></a>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<section id="timelines">
+  <div class="tlHead">
+    <span class="dim small tlHint" data-i18n="tl.hint"></span>
+    <div class="spacer"></div>
+    <span class="mono small" id="dragInfo"></span>
+    <button id="btnZoomSong" data-i18n="tl.song" data-i18n-title="tl.songTitle"></button>
+    <button id="btnZoomFit" data-i18n="tl.video" data-i18n-title="tl.videoTitle"></button>
+    <button id="btnZoomTrim" data-i18n="tl.trim" data-i18n-title="tl.trimTitle"></button>
+    <button id="btnZoomIn" title="=">＋</button>
+    <button id="btnZoomOut" title="-">−</button>
+  </div>
+  <canvas id="cvOverview"></canvas>
+  <canvas id="cvMain"></canvas>
+  <div id="tlScroll"><div id="tlThumb"></div></div>
+</section>
+
+<footer id="statusbar">
+  <span id="statusText"></span>
+  <div class="spacer"></div>
+  <a href="https://github.com/lsetzl/DanceClipWeb" target="_blank" rel="noopener">GitHub</a>
+  <a href="THIRD_PARTY_LICENSES.txt" target="_blank" data-i18n="footer.licenses"></a>
+</footer>
+
+<div id="toasts"></div>
+
+<div id="modal" class="hidden">
+  <div class="modalBox">
+    <div id="modalBody"></div>
+    <div class="row right" id="modalBtns"></div>
+  </div>
+</div>
+
+<div id="help" class="hidden">
+  <div class="modalBox">
+    <h2 data-i18n="help.title"></h2>
+    <table>
+      <tr><td>Space</td><td data-i18n="help.space"></td></tr>
+      <tr><td>← / →</td><td data-i18n="help.arrows"></td></tr>
+      <tr><td>, / .</td><td data-i18n="help.frames"></td></tr>
+      <tr><td>Z / X</td><td data-i18n="help.zx"></td></tr>
+      <tr><td>C / V</td><td data-i18n="help.cv"></td></tr>
+      <tr><td>B</td><td data-i18n="help.b"></td></tr>
+      <tr><td>M</td><td data-i18n="help.m"></td></tr>
+      <tr><td>I / O</td><td data-i18n="help.io"></td></tr>
+      <tr><td>L</td><td data-i18n="help.l"></td></tr>
+      <tr><td>F</td><td data-i18n="help.f"></td></tr>
+      <tr><td>[ / ]</td><td data-i18n="help.rate"></td></tr>
+      <tr><td>= / − / 0</td><td data-i18n="help.zoom"></td></tr>
+      <tr><td>Home / End</td><td data-i18n="help.homeEnd"></td></tr>
+      <tr><td>Ctrl+O / Ctrl+S</td><td data-i18n="help.json"></td></tr>
+      <tr><td>Ctrl+E</td><td data-i18n="help.export"></td></tr>
+    </table>
+    <p class="dim small" data-i18n="help.timeline"></p>
+    <p class="dim small" data-i18n="help.touch"></p>
+    <div class="row right"><button id="btnHelpClose" data-i18n="btn.close"></button></div>
+  </div>
+</div>
+
+<script type="module" src="/src/app/main.ts"></script>
 </body>
 </html>

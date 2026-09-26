@@ -76,7 +76,7 @@ async function run(video: Blob, audio: Blob, p: ClipParams, opts: EncodeOptions)
     const r = await exportClip(video, song, p, opts, (e) => (prog.value = e.fraction), abort.signal);
     const sec = (performance.now() - t0) / 1000;
     const len = (p.trim.end_ms - p.trim.start_ms) / 1000;
-    log(t('poc.done', { sec: sec.toFixed(1), ratio: (len / sec).toFixed(1), frames: r.frames, mb: (r.buffer.byteLength / 1e6).toFixed(1) }));
+    log(t('poc.done', { sec: sec.toFixed(1), ratio: (len / sec).toFixed(1), frames: r.frames, mb: ((r.buffer?.byteLength ?? 0) / 1e6).toFixed(1) }));
     return { ...r, decodeMs, songLength: song.length, songRate: song.sampleRate };
   } finally {
     abort = null;
@@ -93,7 +93,7 @@ $('#run').addEventListener('click', async () => {
     const p = params(info.duration);
     log(t('poc.start', { name: v.name, w: info.width, h: info.height, codec: info.codec ?? '?', len: ((p.trim.end_ms - p.trim.start_ms) / 1000).toFixed(1) }));
     const r = await run(v, a, p, { videoBitrate: Number($<HTMLInputElement>('#vbr').value) * 1e6 });
-    const url = URL.createObjectURL(new Blob([r.buffer], { type: 'video/mp4' }));
+    const url = URL.createObjectURL(new Blob([r.buffer!], { type: 'video/mp4' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = v.name.replace(/\.[^.]+$/, '') + '_clip.mp4';
@@ -127,8 +127,8 @@ if (import.meta.env.DEV) {
   const pocRun = async (cfg: { video: string; audio: string; p: ClipParams; opts: EncodeOptions; out: string }) => {
     const [v, a] = await Promise.all([fetchBlob(cfg.video), fetchBlob(cfg.audio)]);
     const r = await run(v, a, cfg.p, cfg.opts);
-    await fetch('/__test/save?name=' + encodeURIComponent(cfg.out), { method: 'POST', body: r.buffer });
-    return { frames: r.frames, seconds: r.seconds, timings: r.timings, decodeMs: r.decodeMs, bytes: r.buffer.byteLength, songLength: r.songLength, songRate: r.songRate };
+    await fetch('/__test/save?name=' + encodeURIComponent(cfg.out), { method: 'POST', body: r.buffer! });
+    return { frames: r.frames, seconds: r.seconds, timings: r.timings, decodeMs: r.decodeMs, bytes: r.buffer!.byteLength, songLength: r.songLength, songRate: r.songRate };
   };
   const pocAuto = async (name: string) => {
     const jobs = await (await fetch('/__test/jobs?name=' + encodeURIComponent(name))).json();
