@@ -20,3 +20,7 @@ npm run dev
 計測用の `/__test` エンドポイントは dev サーバー専用です。手元のファイルを読ませるフォルダは `test-roots.local.json`(git 管理外、絶対パスの配列)に書きます。
 
 PoC の結果は [POC_RESULTS.md](POC_RESULTS.md)。
+
+## ライセンス / License
+
+MIT([LICENSE](LICENSE))。同梱している第三者ソフトウェアのライセンスは [public/THIRD_PARTY_LICENSES.txt](public/THIRD_PARTY_LICENSES.txt)(公開ページでは `THIRD_PARTY_LICENSES.txt`)。
