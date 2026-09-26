@@ -13,6 +13,7 @@ import {
   type Rotation,
   type Target,
 } from 'mediabunny';
+import { measureAacDelay } from './audioDelay';
 import { t } from './i18n';
 
 export interface ClipParams {
@@ -27,6 +28,8 @@ export interface EncodeOptions {
   videoBitrate?: number;
   videoQuantizer?: number;
   audioBitrate?: number;
+  // 省略時は実測する。テスト用に固定値を渡せる
+  primingSamples?: number;
   hardwareAcceleration?: 'no-preference' | 'prefer-hardware' | 'prefer-software';
 }
 
@@ -112,6 +115,18 @@ function toCwRotation(ccw: number): Rotation {
   return (((360 - (ccw % 360)) % 360)) as Rotation;
 }
 
+const primingCache = new Map<string, Promise<number>>();
+
+function primingFor(sampleRate: number, channels: number, bitrate: number) {
+  const key = `${sampleRate}|${channels}|${bitrate}`;
+  let p = primingCache.get(key);
+  if (!p) {
+    p = measureAacDelay(sampleRate, channels, bitrate).then((d) => Math.max(0, d), () => 0);
+    primingCache.set(key, p);
+  }
+  return p;
+}
+
 export async function exportClip(
   videoFile: Blob,
   song: AudioBuffer,
@@ -153,10 +168,14 @@ export async function exportClip(
     keyFrameInterval: 2,
     hardwareAcceleration: opts.hardwareAcceleration ?? 'no-preference',
   });
-  const audioSource = new AudioBufferSource({
-    codec: 'aac',
-    quality: new Quality({ bitrate: opts.audioBitrate ?? 192_000 }),
-  });
+  // エンコーダーが先頭に足す無音(Android では 2048 サンプル)を負の時刻に置くと、
+  // Mediabunny が edit list を書いて再生時に飛ばしてくれる(ffmpeg の出力と同じ形)
+  const audioBitrate = opts.audioBitrate ?? 192_000;
+  const priming = opts.primingSamples ?? (await primingFor(song.sampleRate, song.numberOfChannels, audioBitrate));
+  const audioSource = new AudioBufferSource(
+    { codec: 'aac', quality: new Quality({ bitrate: audioBitrate }) },
+    { startTimestamp: -priming / song.sampleRate },
+  );
 
   const output = new Output({
     format: new Mp4OutputFormat({ fastStart: target instanceof BufferTarget ? 'in-memory' : false }),

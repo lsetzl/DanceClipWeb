@@ -82,3 +82,9 @@ WebCodecs 方式で実用になる。同期・長さ・フェードは CLI版と
 
 ## 画面からの書き出し
 - OPFS 経由(Android と同じ経路)で 85.6MB、CLI 版との音ズレ 0.00ms、SSIM 0.9923(PoC と同じ)
+
+# Android で音声が遅れる問題(2026-09-27)
+- 原因: Android Chrome の AAC エンコーダー(MediaCodec)は先頭に priming を 2048 サンプル(44.1kHz で 46.4ms)付ける。Windows(Media Foundation)は 0。Web 版の MP4 に edit list がなかったため、Android で書き出すと音が約 46ms 遅れていた(Android 10 / Chrome 153 で実測。poc.html の「音声の遅延を測る」)
+- 対処: 書き出しの直前に、そのブラウザのエンコーダーの priming をエンコード → デコードの往復で実測し(`src/audioDelay.ts`)、音声の開始時刻を `-priming / サンプルレート` にする。Mediabunny が edit list(media_time = priming)を書き、再生時に飛ばされる。CLI 版(ffmpeg)の出力と同じ形
+- 検証(Windows): priming を 2048 と仮定すると edit list が入り、音が 46.5ms 早くなる(仕組みの確認)。実測に任せると edit list なしで CLI 版とのずれ 0.00ms
+- Android のプレビュー: 本体スピーカーで outputLatency=40ms と getOutputTimestamp の実測 38.6ms がほぼ一致。Bluetooth 機器では確認していない
