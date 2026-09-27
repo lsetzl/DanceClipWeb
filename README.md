@@ -14,12 +14,16 @@ Your video and song never leave your device.
 ## 使い方 / How to use
 
 1. 動画と曲を選ぶ(ドロップでも可)。動画の音声は使いません
-2. タイムラインの「動画」の段を左右にドラッグして、動きの山(水色)を曲の拍(黄色の線)に合わせる。だいたい合わせてから「自動合わせ」で再生位置のまわりのいちばん合う位置に寄せる
-3. 青い縦棒で使う範囲を決めて「書き出す」
+2. 大まかな位置を決める: 「曲」ボタンで曲全体を表示して、「動画」の段を使いたい曲の部分(サビなど)までドラッグする
+3. 拍に合わせる: 拡大して、動きの山(水色)を拍線(黄色)に揃える。だいたい揃ったら、動きのはっきりした所で「自動合わせ」を押す
+4. 拍の数え方を合わせる: 再生して、踊りの「1」が曲の小節の頭に来ているか確かめる。ずれていたら「−拍 / +拍」で 1 拍ずつずらす
+5. 青い縦棒で使う範囲を決めて「書き出す」
 
 1. Choose a video and a song (or drop them). The video's own audio is not used
-2. Drag the “Video” lane so the motion peaks (cyan) line up with the beats (yellow lines), then press “Auto-align”
-3. Choose the range with the blue bars and press “Export”
+2. Rough position: show the whole song with “Song” and drag the “Video” lane to the part you want
+3. Match the beat: line up the motion peaks (cyan) with the beat lines (yellow), then press “Auto-align”
+4. Match the count: check that the dance's “1” lands on the start of a bar; if not, shift with “−Beat / +Beat”
+5. Choose the range with the blue bars and press “Export”
 
 ## 対応環境と制限 / Support and limitations
 
