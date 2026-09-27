@@ -14,11 +14,11 @@ Your video and song never leave your device.
 ## 使い方 / How to use
 
 1. 動画と曲を選ぶ(ドロップでも可)。動画の音声は使いません
-2. タイムラインの「動画」の段を左右にドラッグして、動きの山(水色)を曲の拍(黄色の線)に合わせる。だいたい合わせてから「吸着」で近くのいちばん合う位置に寄せる
+2. タイムラインの「動画」の段を左右にドラッグして、動きの山(水色)を曲の拍(黄色の線)に合わせる。だいたい合わせてから「自動合わせ」で再生位置のまわりのいちばん合う位置に寄せる
 3. 青い縦棒で使う範囲を決めて「書き出す」
 
 1. Choose a video and a song (or drop them). The video's own audio is not used
-2. Drag the “Video” lane so the motion peaks (cyan) line up with the beats (yellow lines), then press “Snap”
+2. Drag the “Video” lane so the motion peaks (cyan) line up with the beats (yellow lines), then press “Auto-align”
 3. Choose the range with the blue bars and press “Export”
 
 ## 対応環境と制限 / Support and limitations

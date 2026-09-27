@@ -127,7 +127,8 @@ export function beatLock() {
     if (!r.applied) return toast(t('lock.lowCorr', { c: r.correlation.toFixed(3) }), 'warn');
     S.p.video_ref_ms += r.delta_ms;
     changed({ sync: true });
-    toast(t(r.delta_ms <= 0 ? 'lock.movedRight' : 'lock.movedLeft', { s: LOCK_HALF_S, ms: Math.abs(r.delta_ms), c: r.correlation.toFixed(3) }));
+    const key = r.delta_ms === 0 ? 'lock.already' : r.delta_ms < 0 ? 'lock.movedRight' : 'lock.movedLeft';
+    toast(t(key, { ms: Math.abs(r.delta_ms), c: r.correlation.toFixed(3) }));
   } catch (e) {
     toast(e instanceof LockError ? t('lock.edge') : t('lock.failed', { msg: e instanceof Error ? e.message : String(e) }), 'error');
   }

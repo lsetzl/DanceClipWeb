@@ -162,7 +162,9 @@ body.dragging #welcome { border-color: var(--accent); }
   #dragInfo:empty { display: none; }
   #tlScroll { height: 18px; }
   #toasts { top: 56px; bottom: auto; left: 8px; right: 8px; align-items: stretch; }
-  #quickBar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+  #quickBar { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 8px; }
+  #quickBar button { grid-column: span 3; }
+  #quickBar button:nth-child(n + 5) { grid-column: span 4; }
   #quickBar button { padding: 9px 0; min-width: 0; font-size: 13px; }
   #side .btnrow, #side .syncBtns { display: none; }
 }
