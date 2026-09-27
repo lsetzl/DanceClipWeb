@@ -58,6 +58,7 @@ npm run dev
 | `tests/dsp.test.ts` | 解析のテスト(`npm test`、CI でも実行)。合成信号に対するデスクトップ版(librosa / scipy / ffmpeg)の結果と一致するかを確かめる。正解データは `tools/make_fixtures.py` で作る |
 | `tests/dsp-compare.ts` | 実際の曲でのデスクトップ版との突き合わせ(手元用。`npx tsx tests/dsp-compare.ts <name> [song]`) |
 | `tests/lock-compare.ts` | 実データでの自動合わせの新旧比較(手元用) |
+| `tests/bars-compare.ts` | 小節の頭の推定を、研究用の検出器 beat_this の結果と比べる(手元用) |
 | `public/sw.js` | オフライン用の Service Worker。キャッシュするファイルの一覧はビルド時に `precache.json` として作る |
 | `tools/make_icons.py` | アイコンと SNS 共有用の画像を作る |
 | `tools/` | 書き出し結果の比較(音ズレ、SSIM)、デスクトップ版の解析結果の書き出し |

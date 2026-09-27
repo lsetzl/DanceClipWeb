@@ -1,5 +1,6 @@
 import { ALL_FORMATS, BlobSource, Input } from 'mediabunny';
 import { analyzeAudio, analyzeMotion } from '../analysis/client';
+import { estimateBarPhase } from '../dsp/bars';
 import { t } from '../i18n';
 import { changed, normalizeTrim, scheduleLocalBpm } from './actions';
 import { P, video } from './player';
@@ -211,6 +212,7 @@ async function loadAudioSignals(file: File) {
     S.onset = r.onset;
     S.beats = r.beats;
     S.bpm = r.bpm;
+    S.autoBarPhase = estimateBarPhase(r.beats, { chroma: r.chroma, low: r.low });
     scheduleLocalBpm();
     S.dirty = true;
     updatePanels();

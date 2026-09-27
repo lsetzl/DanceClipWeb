@@ -11,7 +11,7 @@ export type WorkerRequest =
 export type WorkerResponse =
   | { id: number; type: 'progress'; fraction: number }
   | { id: number; type: 'motion'; motion: Float32Array }
-  | { id: number; type: 'audio'; onset: Float32Array; bpm: number; beats: number[] }
+  | { id: number; type: 'audio'; onset: Float32Array; bpm: number; beats: number[]; chroma: Float32Array; low: Float32Array }
   | { id: number; type: 'error'; message: string };
 
 const aborts = new Map<number, AbortController>();
@@ -44,10 +44,13 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       const k = m.channels.length === 2 ? Math.SQRT1_2 : 1 / m.channels.length;
       for (const ch of m.channels) for (let i = 0; i < n; i++) mono[i] += ch[i] * k;
       progress(0.02);
-      const onset = onsetStrength(resample(mono, m.sampleRate, SR), (f) => progress(0.1 + 0.9 * f));
+      const y = resample(mono, m.sampleRate, SR);
+      const frames = 1 + Math.floor(y.length / (SR / 50));
+      const extras = { chroma: new Float32Array(frames * 12), low: new Float32Array(frames) };
+      const onset = onsetStrength(y, (f) => progress(0.1 + 0.9 * f), extras);
       const bpm = estimateBpm(onset);
       const beats = beatTrack(onset, bpm);
-      post({ id: m.id, type: 'audio', onset, bpm, beats }, [onset.buffer]);
+      post({ id: m.id, type: 'audio', onset, bpm, beats, ...extras }, [onset.buffer, extras.chroma.buffer, extras.low.buffer]);
     }
   } catch (err) {
     post({ id: m.id, type: 'error', message: err instanceof Error ? err.message : String(err) });

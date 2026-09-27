@@ -3,7 +3,7 @@ import { decodeSong } from '../export';
 import type { WorkerRequest, WorkerResponse } from './worker';
 import AnalysisWorker from './worker?worker';
 
-const ANALYSIS_VERSION = 2;
+const ANALYSIS_VERSION = 3;
 
 let worker: Worker | null = null;
 let nextId = 1;
@@ -67,6 +67,8 @@ export interface AudioAnalysis {
   onset: Float32Array;
   bpm: number;
   beats: number[];
+  chroma: Float32Array;
+  low: Float32Array;
 }
 
 // GUI版(ffmpeg で 22050Hz モノラル → librosa)と同じ入力にするため、元のサンプルレートでデコードし直す
@@ -77,6 +79,6 @@ export function analyzeAudio(file: File, progress?: (f: number) => void): Promis
     const r = request({ type: 'audio', channels, sampleRate: song.sampleRate }, channels.map((c) => c.buffer), progress);
     const m = await r.done;
     if (m.type !== 'audio') throw new Error('unexpected');
-    return { onset: m.onset, bpm: m.bpm, beats: m.beats };
+    return { onset: m.onset, bpm: m.bpm, beats: m.beats, chroma: m.chroma, low: m.low };
   });
 }

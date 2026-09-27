@@ -2,7 +2,7 @@ import { estimateBpm } from '../dsp/beat';
 import { beatLockStable, LockError } from '../dsp/lock';
 import { t } from '../i18n';
 import { currentVideoTime, P } from './player';
-import { clamp, LOCK_HALF_S, MIN_TRIM_MS, offsetS, ready, S } from './state';
+import { barPhase, clamp, LOCK_HALF_S, MIN_TRIM_MS, offsetS, ready, S } from './state';
 import { fileKey, saveProject } from './storage';
 import { $, toast } from './ui';
 import { updatePanels } from './view';
@@ -137,6 +137,18 @@ export function beatLock() {
   } catch (e) {
     toast(e instanceof LockError ? t('lock.edge') : t('lock.failed', { msg: e instanceof Error ? e.message : String(e) }), 'error');
   }
+}
+
+export function shiftBarPhase(d: number) {
+  if (!S.p || !S.beats) return;
+  S.p.bar_phase = (((barPhase() + d) % 4) + 4) % 4;
+  changed();
+}
+
+export function resetBarPhase() {
+  if (!S.p) return;
+  S.p.bar_phase = null;
+  changed();
 }
 
 export function setIn() {

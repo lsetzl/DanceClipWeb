@@ -1,7 +1,7 @@
 import '../messages';
 import './messages';
 import { applyI18n, lang, setLang, t, type Lang } from '../i18n';
-import { addMarker, beatLock, changed, clampFades, deleteSelectedMarker, nudge, setIn, setOut, setTrim } from './actions';
+import { addMarker, beatLock, changed, clampFades, deleteSelectedMarker, nudge, resetBarPhase, setIn, setOut, setTrim, shiftBarPhase } from './actions';
 import { cancelRender, checkSupport, startRender } from './exporter';
 import { classify, exportProjectJson, handleDrop, importProjectJson, openAudio, openVideo, pickFile, renderRecent, type Picked } from './media';
 import { currentSongTime, currentVideoTime, P } from './player';
@@ -183,6 +183,9 @@ function wire() {
   $('#btnMarker').onclick = $('#qMarker').onclick = () => ready() && addMarker(currentVideoTime());
   $('#btnDelMarker').onclick = $('#qDelMarker').onclick = () => ready() && deleteSelectedMarker();
   $('#qLock').onclick = beatLock;
+  $('#btnBarPrev').onclick = () => shiftBarPhase(-1);
+  $('#btnBarNext').onclick = () => shiftBarPhase(1);
+  $('#btnBarAuto').onclick = resetBarPhase;
   $('#btnSetIn').onclick = () => ready() && setIn();
   $('#btnSetOut').onclick = () => ready() && setOut();
   $('#btnZoomSong').onclick = viewSong;

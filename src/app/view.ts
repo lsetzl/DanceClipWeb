@@ -76,6 +76,8 @@ export function updatePanels() {
     setInput('#inEnd', p.trim.end_ms);
     $('#trimDur').textContent = t('trim.length', { t: fmt((p.trim.end_ms - p.trim.start_ms) / 1000) });
   }
+  $('#barInfo').textContent = p.bar_phase == null ? t('bar.auto') : t('bar.manual');
+  $('#btnBarAuto').classList.toggle('hidden', p.bar_phase == null);
   setInput('#inFadeIn', p.fade.in_ms);
   setInput('#inFadeOut', p.fade.out_ms);
   $<HTMLSelectElement>('#selRotation').value = p.rotation == null ? 'auto' : String(p.rotation);

@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { addMarker, changed, removeMarker, selectMarker, setTrim } from './actions';
 import { currentSongTime, P } from './player';
-import { clamp, MIN_TRIM_MS, offsetS, PEAK_HZ, ready, S, SNAP_PX, trimS, videoPosMs } from './state';
+import { barPhase, clamp, MIN_TRIM_MS, offsetS, PEAK_HZ, ready, S, SNAP_PX, trimS, videoPosMs } from './state';
 import { $, fmt } from './ui';
 
 interface Cv { c: HTMLCanvasElement; g: CanvasRenderingContext2D; w: number; h: number }
@@ -30,6 +30,7 @@ const COL = {
   bg: '#101218', marker: '#ff7ad9', ruler: '#171a21', grid: '#262b36', text: '#8b92a3', motion: '#57d5e6',
   wave: '#56607a', play: '#ffffff', accent: '#4fb3ff', fade: '#ffc24f', shade: 'rgba(0,0,0,0.58)',
   beatSong: 'rgba(255,194,79,0.85)', beatVideo: 'rgba(255,194,79,0.35)', outside: '#08090c',
+  barSong: '#ffe6a8', barVideo: 'rgba(255,214,130,0.7)',
 };
 const LAYOUT = { ruler: 18, song: 96, gap: 3 };
 const lanes = (h: number) => {
@@ -245,13 +246,22 @@ function drawMain() {
   const beats = S.beats;
   if (beats && beats.length > 1) {
     const spacing = ((beats[1] - beats[0]) / (V.t1 - V.t0)) * w;
-    if (spacing >= 3) {
-      for (const b of beats) {
+    const phase = barPhase();
+    // 縮小して拍線が詰まったら、小節線だけ描く
+    if (spacing * 4 >= 4) {
+      beats.forEach((b, i) => {
+        const bar = (((i - phase) % 4) + 4) % 4 === 0;
+        if (!bar && spacing < 3) return;
         const bx = x(b);
-        if (bx < 0 || bx > w) continue;
-        vline(g, bx, L.SY, L.SY + L.SH, COL.beatSong);
-        vline(g, bx, L.VY, L.VY + L.VH - 12, COL.beatVideo);
-      }
+        if (bx < 0 || bx > w) return;
+        if (bar) {
+          vline(g, bx, L.R - 6, L.SY + L.SH, COL.barSong, 2.5);
+          vline(g, bx, L.VY, L.VY + L.VH - 12, COL.barVideo, 2);
+        } else {
+          vline(g, bx, L.SY, L.SY + L.SH, COL.beatSong);
+          vline(g, bx, L.VY, L.VY + L.VH - 12, COL.beatVideo);
+        }
+      });
     }
   }
   if (xv1 > xv0) {

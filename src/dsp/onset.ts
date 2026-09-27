@@ -39,7 +39,13 @@ function melFilterbank(sr: number, nFft: number, nMels: number): Float64Array[] 
   return weights;
 }
 
-export function onsetStrength(y: Float32Array, onProgress?: (f: number) => void): Float32Array {
+// 小節の頭の推定に使う、フレームごとのクロマ(12 音)と低音(150Hz 未満)の強さ
+export interface SpectralExtras {
+  chroma: Float32Array;
+  low: Float32Array;
+}
+
+export function onsetStrength(y: Float32Array, onProgress?: (f: number) => void, extras?: SpectralExtras): Float32Array {
   const pad = N_FFT / 2;
   const nFrames = 1 + Math.floor(y.length / HOP);
   const win = new Float64Array(N_FFT);
@@ -54,6 +60,14 @@ export function onsetStrength(y: Float32Array, onProgress?: (f: number) => void)
   });
 
   const db = new Float32Array(nFrames * N_MELS);
+  const nBins = N_FFT / 2 + 1;
+  const pitchClass = new Int8Array(nBins).fill(-1);
+  let lowBins = 0;
+  for (let k = 1; k < nBins; k++) {
+    const f = (k * SR) / N_FFT;
+    if (f < 150) lowBins = k;
+    if (f >= 65 && f <= 2100) pitchClass[k] = ((Math.round(12 * Math.log2(f / 440) + 69) % 12) + 12) % 12;
+  }
   const re = new Float64Array(N_FFT), im = new Float64Array(N_FFT);
   const power = new Float64Array(N_FFT / 2 + 1);
   let maxDb = -Infinity;
@@ -66,6 +80,12 @@ export function onsetStrength(y: Float32Array, onProgress?: (f: number) => void)
     }
     fft(re, im);
     for (let k = 0; k <= N_FFT / 2; k++) power[k] = re[k] * re[k] + im[k] * im[k];
+    if (extras) {
+      let lo = 0;
+      for (let k = 1; k <= lowBins; k++) lo += power[k];
+      extras.low[t] = Math.log10(1e-10 + lo);
+      for (let k = 1; k < nBins; k++) if (pitchClass[k] >= 0) extras.chroma[t * 12 + pitchClass[k]] += power[k];
+    }
     for (let m = 0; m < N_MELS; m++) {
       const w = mel[m];
       const [a, b] = ranges[m];

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { beatTrack, estimateBpm } from '../src/dsp/beat';
 import { highpass } from '../src/dsp/filter';
 import { beatLock, beatLockStable } from '../src/dsp/lock';
+import { estimateBarPhase } from '../src/dsp/bars';
 import { onsetStrength } from '../src/dsp/onset';
 import { resample } from '../src/dsp/resample';
 import { beatAudio, HZ, motionSignal, SR, tones } from './signals';
@@ -95,5 +96,23 @@ describe('自動合わせ(何度押しても同じ位置に落ち着く版)', ()
 
   it('曲の範囲の外を比べることになる位置ではエラーにする', () => {
     expect(() => beatLockStable(motion, onset, 15000, -20000, bpm)).toThrow();
+  });
+});
+
+describe('小節の頭の推定', () => {
+  // 0.5 秒ごとの拍。位相 1 の拍からコードが変わり、キックは位相 1 と 3 の拍に入る
+  const beats = Array.from({ length: 64 }, (_, i) => 1 + i * 0.5);
+  const frames = 50 * 40;
+  const chroma = new Float32Array(frames * 12);
+  const low = new Float32Array(frames).fill(-3);
+  beats.forEach((b, i) => {
+    const bar = Math.floor((i - 1) / 4);
+    const pc = [0, 5, 7, 9][((bar % 4) + 4) % 4];
+    for (let t = Math.round(b * 50); t < Math.round((b + 0.5) * 50); t++) chroma[t * 12 + pc] = 1;
+    if ((i - 1) % 2 === 0) for (let t = Math.round(b * 50); t < Math.round(b * 50) + 3; t++) low[t] = 0;
+  });
+
+  it('コードの変化とキックの位置から位相を選ぶ', () => {
+    expect(estimateBarPhase(beats, { chroma, low })).toBe(1);
   });
 });

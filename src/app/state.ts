@@ -18,6 +18,8 @@ export interface Project {
   rotation: number | null;
   output: string | null;
   markers: number[];
+  // 拍 i は (i - bar_phase) % 4 === 0 のとき小節の頭。null なら自動で推定した値を使う
+  bar_phase?: number | null;
 }
 
 export interface TrimmedProject extends Project {
@@ -51,6 +53,7 @@ export const S = {
   motionScale: 1,
   onset: null as Float32Array | null,
   beats: null as number[] | null,
+  autoBarPhase: 0,
   bpm: null as number | null,
   localBpm: null as number | null,
   loop: false,
@@ -68,6 +71,8 @@ export const trimS = () =>
   S.p && S.p.trim.start_ms != null && S.p.trim.end_ms != null
     ? { start: S.p.trim.start_ms / 1000, end: S.p.trim.end_ms / 1000 }
     : null;
+
+export const barPhase = () => S.p?.bar_phase ?? S.autoBarPhase;
 
 export const beatMs = () => Math.round(60000 / (S.localBpm || S.bpm || 120));
 

@@ -54,6 +54,7 @@ a { color: #9ab8d8; }
 .item .t { font-size: 11px; color: var(--dim); }
 .itemDel { float: right; padding: 0 8px; margin-left: 8px; background: transparent; border-color: transparent; color: var(--dim); }
 .itemDel:hover { color: var(--danger); }
+.linkish { background: transparent; border-color: transparent; color: #9ab8d8; text-decoration: underline; padding: 2px 4px; }
 #supportWarn { background: #4a2626; color: #ffd2d2; padding: 6px 12px; border-bottom: 1px solid #7a3a3a; }
 
 #main { display: grid; grid-template-columns: 1fr 290px; min-height: 0; }
