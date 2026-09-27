@@ -1,5 +1,5 @@
 import { estimateBpm } from '../dsp/beat';
-import { beatLock as lockCore, LockError } from '../dsp/lock';
+import { beatLockStable, LockError } from '../dsp/lock';
 import { t } from '../i18n';
 import { currentVideoTime, P } from './player';
 import { clamp, LOCK_HALF_S, MIN_TRIM_MS, offsetS, ready, S } from './state';
@@ -113,6 +113,9 @@ export function nudge(ms: number) {
   changed({ sync: true });
 }
 
+// 再生位置も同期も変えずにもう一度押したときは、前回と同じ範囲で探し直す(同じ答えになる)
+let lastLock: { vAnchor: number; after: number; center: number } | null = null;
+
 export function beatLock() {
   if (!ready() || !S.p) return;
   if (!S.motion || !S.onset) return toast(t('lock.notReady'), 'warn');
@@ -120,12 +123,14 @@ export function beatLock() {
   const vMin = LOCK_HALF_S * 1000, vMax = Math.max(vMin, S.vDur * 1000 - LOCK_HALF_S * 1000);
   let vAnchor = clamp(Math.round(currentVideoTime() * 1000), vMin, vMax);
   vAnchor = clamp(vAnchor, offMs + vMin, offMs + S.aDur * 1000 - vMin);
+  const center = lastLock && lastLock.vAnchor === vAnchor && lastLock.after === offMs ? lastLock.center : offMs;
   try {
-    const aAnchor = vAnchor - offMs;
-    const bpm = estimateBpm(S.onset, aAnchor / 1000);
-    const r = lockCore(S.motion, S.onset, vAnchor, aAnchor, bpm);
+    // BPM を推定する位置は 10 秒刻みに丸めて、少し動かしただけでは変わらないようにする
+    const bpm = estimateBpm(S.onset, Math.round((vAnchor - center) / 10000) * 10);
+    const r = beatLockStable(S.motion, S.onset, vAnchor, offMs, bpm, center);
     if (!r.applied) return toast(t('lock.lowCorr', { c: r.correlation.toFixed(3) }), 'warn');
     S.p.video_ref_ms += r.delta_ms;
+    lastLock = { vAnchor, after: offMs + r.delta_ms, center };
     changed({ sync: true });
     const key = r.delta_ms === 0 ? 'lock.already' : r.delta_ms < 0 ? 'lock.movedRight' : 'lock.movedLeft';
     toast(t(key, { ms: Math.abs(r.delta_ms), c: r.correlation.toFixed(3) }));

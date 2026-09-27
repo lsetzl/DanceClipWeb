@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { beatTrack, estimateBpm } from '../src/dsp/beat';
 import { highpass } from '../src/dsp/filter';
-import { beatLock } from '../src/dsp/lock';
+import { beatLock, beatLockStable } from '../src/dsp/lock';
 import { onsetStrength } from '../src/dsp/onset';
 import { resample } from '../src/dsp/resample';
 import { beatAudio, HZ, motionSignal, SR, tones } from './signals';
@@ -64,4 +64,36 @@ describe('ffmpeg のリサンプラーの移植', () => {
       expect(10 * Math.log10(p / e)).toBeGreaterThan(80);
     });
   }
+});
+
+describe('自動合わせ(何度押しても同じ位置に落ち着く版)', () => {
+  const motion = motionSignal(onset.length, 0.12);
+  const bpm = estimateBpm(onset);
+  const beatMs = 60000 / bpm;
+  const starts = [0, 60, 200, -60, 33, -47];
+  const landed = starts.map((start) => start + beatLockStable(motion, onset, 12000, start, bpm).delta_ms);
+
+  it('押し直すと動かない', () => {
+    starts.forEach((start, i) => {
+      expect(beatLockStable(motion, onset, 12000, landed[i], bpm, start).delta_ms).toBe(0);
+    });
+  });
+
+  it('どこから押しても、拍の周期で見て同じ位置に落ち着く', () => {
+    for (const x of landed) {
+      const d = (((x - landed[0]) % beatMs) + beatMs) % beatMs;
+      expect(Math.min(d, beatMs - d)).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('1 回目の結果が GUI 版の計算と 20ms 以内で一致する', () => {
+    starts.forEach((start, i) => {
+      const old = start + beatLock(motion, onset, 12000, 12000 - start, bpm).delta_ms;
+      expect(Math.abs(landed[i] - old)).toBeLessThanOrEqual(20);
+    });
+  });
+
+  it('曲の範囲の外を比べることになる位置ではエラーにする', () => {
+    expect(() => beatLockStable(motion, onset, 15000, -20000, bpm)).toThrow();
+  });
 });

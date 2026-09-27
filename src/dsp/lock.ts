@@ -82,3 +82,50 @@ export function beatLock(
     applied,
   };
 }
+
+// 何度押しても同じ位置に落ち着く版。動画側は再生位置の前後を固定し、曲側だけをずらして比べる。
+// 探す範囲は searchCenterMs(省略時は今の同期)の ±半拍。同じ中心で探し直せば同じ答えになる
+export function beatLockStable(
+  motion: ArrayLike<number>,
+  onset: ArrayLike<number>,
+  vAnchorMs: number,
+  offsetMs: number,
+  bpm: number,
+  searchCenterMs = offsetMs,
+  windowS = 8,
+  searchBeats = 0.5,
+  minCorrelation = 0.03,
+): Omit<LockResult, 'video_ref_ms'> {
+  const maxLag = roundHalfEven(((60000 / bpm) * searchBeats / 1000) * HZ);
+  const n = roundHalfEven(windowS * HZ);
+  const vs = Math.max(0, roundHalfEven((vAnchorMs / 1000) * HZ) - Math.floor(n / 2));
+  const len = Math.min(n, motion.length - vs);
+  if (len < Math.max(HZ * 2, maxLag * 2 + 8)) throw new LockError('too-short');
+  const fc = hpCutoff(bpm);
+  const hm = normalize(highpass(Array.prototype.slice.call(motion, vs, vs + len), fc, HZ));
+  // 押すたびに丸めの向きが変わらないよう、ここは偶数丸めではなく常に同じ向きに丸める
+  const d0 = Math.round((searchCenterMs / 1000) * HZ);
+
+  // lag > 0 は video_ref を増やす方向。曲側の区間は lag の分だけ前に来る
+  let best = -Infinity, bestLag = 0;
+  for (let lag = -maxLag; lag <= maxLag; lag++) {
+    const as = vs - d0 - lag;
+    if (as < 0 || as + len > onset.length) continue;
+    const ha = normalize(highpass(Array.prototype.slice.call(onset, as, as + len), fc, HZ));
+    let s = 0;
+    for (let i = 0; i < len; i++) s += hm[i] * ha[i];
+    if (s > best || (s === best && Math.abs(lag) < Math.abs(bestLag))) {
+      best = s;
+      bestLag = lag;
+    }
+  }
+  if (best === -Infinity) throw new LockError('too-short');
+  const delta = Math.round(searchCenterMs + (bestLag * 1000) / HZ - offsetMs);
+  const applied = best >= minCorrelation;
+  return {
+    delta_ms: applied ? delta : 0,
+    raw_delta_ms: delta,
+    correlation: best,
+    applied,
+  };
+}
