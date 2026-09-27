@@ -154,6 +154,8 @@ export async function exportClip(
     return b;
   });
 
+  // HDR / 10bit のフレームは 8bit の H.264 エンコーダーにそのまま渡せないので、canvas で SDR にしてから渡す
+  const hdr = await track.hasHighDynamicRange().catch(() => false);
   const w = track.codedWidth;
   const h = track.codedHeight;
   const canvas = new OffscreenCanvas(w, h);
@@ -196,14 +198,17 @@ export async function exportClip(
     const dur = Math.max(1e-3, nextTs - startS - tOut);
     const gain = fadeGainAt(srcTs - startS, durS, finS, foutS);
     let out: VideoSample;
-    if (gain >= 1) {
+    const highBitDepth = /P1[02]/.test(s.format ?? '');
+    if (gain >= 1 && !hdr && !highBitDepth) {
       out = s;
     } else {
       // 回転は出力のメタデータで付けるので、ここではタグを反映させずに元の向きのまま描く
       s.setRotation(0);
       s.draw(ctx, 0, 0, w, h);
-      ctx.fillStyle = `rgba(0,0,0,${1 - gain})`;
-      ctx.fillRect(0, 0, w, h);
+      if (gain < 1) {
+        ctx.fillStyle = `rgba(0,0,0,${1 - gain})`;
+        ctx.fillRect(0, 0, w, h);
+      }
       s.close();
       out = new VideoSample(canvas, { timestamp: 0 });
     }

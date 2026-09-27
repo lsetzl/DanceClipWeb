@@ -6,7 +6,7 @@ import './messages';
 
 define(
   {
-    'poc.title': 'DanceClip Web — 書き出しテスト',
+    'poc.title': 'DanceClip — 書き出しの診断',
     'poc.lead': '動画と曲はこの端末の中だけで処理します。どこにも送信しません。',
     'poc.files': 'ファイル',
     'poc.video': '動画',
@@ -14,7 +14,7 @@ define(
     'poc.settings': '設定',
     'poc.length': '書き出す長さ(秒、動画の先頭から)',
     'poc.bitrate': '映像ビットレート(Mbps)',
-    'poc.advanced': '詳細: GUI版のプロジェクト JSON で指定',
+    'poc.advanced': '詳細: プロジェクト JSON で指定',
     'poc.jsonHelp': '空欄なら上の長さを使います。入れた場合は同期・トリム・フェードをこの値にします。',
     'poc.run': '書き出す',
     'poc.cancel': 'キャンセル',
@@ -27,7 +27,7 @@ define(
     'poc.diagRun': '音声の遅延を測る',
   },
   {
-    'poc.title': 'DanceClip Web — Export test',
+    'poc.title': 'DanceClip — Export diagnostics',
     'poc.lead': 'Your video and song are processed only on this device. Nothing is uploaded.',
     'poc.files': 'Files',
     'poc.video': 'Video',
@@ -35,7 +35,7 @@ define(
     'poc.settings': 'Settings',
     'poc.length': 'Length to export (seconds from the start of the video)',
     'poc.bitrate': 'Video bitrate (Mbps)',
-    'poc.advanced': 'Advanced: use a project JSON from the desktop version',
+    'poc.advanced': 'Advanced: use a project JSON',
     'poc.jsonHelp': 'If empty, the length above is used. Otherwise sync, trim and fades come from this JSON.',
     'poc.run': 'Export',
     'poc.cancel': 'Cancel',

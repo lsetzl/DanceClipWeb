@@ -9,7 +9,31 @@ Your video and song never leave your device.
 
 - 推奨ブラウザ / Recommended: Chrome, Edge (PC / Android)
 - 書き出し / Export: WebCodecs (H.264 14Mbps + AAC 192kbps) + [Mediabunny](https://mediabunny.dev/)
-- 設定はブラウザ内(IndexedDB)に自動保存。JSON での保存 / 読み込みも可能(デスクトップ版の JSON も読める)
+- 設定はブラウザ内(IndexedDB)に自動保存。JSON での保存 / 読み込みも可能
+
+## 使い方 / How to use
+
+1. 動画と曲を選ぶ(ドロップでも可)。動画の音声は使いません
+2. タイムラインの「動画」の段を左右にドラッグして、動きの山(水色)を曲の拍(黄色の線)に合わせる。だいたい合わせてから「吸着」で近くのいちばん合う位置に寄せる
+3. 青い縦棒で使う範囲を決めて「書き出す」
+
+1. Choose a video and a song (or drop them). The video's own audio is not used
+2. Drag the “Video” lane so the motion peaks (cyan) line up with the beats (yellow lines), then press “Snap”
+3. Choose the range with the blue bars and press “Export”
+
+## 対応環境と制限 / Support and limitations
+
+| | |
+|---|---|
+| 書き出し | PC と Android の Chrome / Edge。Safari(iPhone)と Firefox は書き出しに対応していません(理由を画面に表示します) |
+| 動画 | H.264 / H.265。H.265 はブラウザと端末が対応している場合のみ。HDR の動画は SDR に変換され、元より少し暗くなります |
+| 拍の検出 | BPM 80〜160 を想定。それより速い / 遅い曲では拍線が半分 / 倍の間隔になります |
+| 保存 | 設定はブラウザ内(IndexedDB)に自動保存。別の端末へは「JSON 保存」で移せます |
+
+- **プライバシー**: 動画と曲はブラウザの中だけで処理し、どこにも送信しません。アクセス解析も入れていません
+- **Privacy**: Your video and song are processed only in your browser and are never uploaded. There is no analytics
+- 不具合の報告・要望 / Bug reports: [Issues](https://github.com/lsetzl/DanceClipWeb/issues)
+- 書き出しに問題があるときの診断ページ / Diagnostics: https://lsetzl.github.io/DanceClipWeb/poc.html
 
 ## 開発 / Development
 
@@ -26,7 +50,7 @@ npm run dev
 | `src/export.ts` | 書き出し(WebCodecs + Mediabunny + OfflineAudioContext) |
 | `src/dsp/` | 解析。librosa の onset / tempo / beat_track、scipy の butter + sosfiltfilt、ffmpeg のリサンプラーの移植 |
 | `src/analysis/` | 解析用の Web Worker と、IndexedDB へのキャッシュ |
-| `poc.html` | 書き出しだけを試すページ |
+| `poc.html` | 書き出しだけを試す診断ページ(AAC エンコーダーの遅延、出力遅延の表示) |
 | `tests/dsp-compare.ts` | デスクトップ版(Python)の解析結果との突き合わせ(`npx tsx tests/dsp-compare.ts <name> [song]`) |
 | `tools/` | 書き出し結果の比較(音ズレ、SSIM)、デスクトップ版の解析結果の書き出し |
 

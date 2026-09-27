@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import { changed, normalizeTrim, scheduleLocalBpm } from './actions';
 import { P, video } from './player';
 import { newProject, normalizeProject, PEAK_HZ, S, type Project, type VideoInfo } from './state';
-import { fileKey, loadProject, recentProjects, type SavedProject } from './storage';
+import { deleteProject, fileKey, loadProject, recentProjects, type SavedProject } from './storage';
 import { viewFit } from './timeline';
 import { $, fmt, loading, modal, percentile, status, toast } from './ui';
 import { layoutVideo, updatePanels, updateSourceInfo } from './view';
@@ -62,15 +62,17 @@ async function fileFromHandle(handle: FileSystemFileHandle | undefined): Promise
   }
 }
 
-async function probe(file: File): Promise<VideoInfo & { canDecode: boolean }> {
+async function probe(file: File): Promise<VideoInfo & { canDecode: boolean; hdr: boolean; hasAudio: boolean }> {
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
   try {
     const track = await input.getPrimaryVideoTrack();
     if (!track) throw new Error(t('err.noVideoTrack'));
-    const [duration, stats, canDecode] = await Promise.all([
+    const [duration, stats, canDecode, hdr, audioTrack] = await Promise.all([
       track.computeDuration(),
       track.computePacketStats(120).catch(() => null),
       track.canDecode(),
+      track.hasHighDynamicRange().catch(() => false),
+      input.getPrimaryAudioTrack().catch(() => null),
     ]);
     return {
       width: track.displayWidth,
@@ -80,6 +82,8 @@ async function probe(file: File): Promise<VideoInfo & { canDecode: boolean }> {
       duration,
       fps: stats?.averagePacketRate || 30,
       canDecode,
+      hdr,
+      hasAudio: !!audioTrack,
     };
   } finally {
     input.dispose();
@@ -124,6 +128,8 @@ async function loadVideo(file: File, handle: FileSystemFileHandle | null, { keep
     loadVideoSignals(file);
     if (!info.canDecode) toast(t('warn.cannotExport', { codec: info.codec ?? '?' }), 'warn', 10000);
     if (info.rotation) toast(t('warn.rotTag', { deg: (360 - info.rotation) % 360 }), 'warn', 7000);
+    if (info.hdr) toast(t('warn.hdr'), 'warn', 10000);
+    if (info.hasAudio) toast(t('info.videoAudio'), '', 7000);
   } finally {
     loading(null);
   }
@@ -183,7 +189,7 @@ function computePeaks(buffer: AudioBuffer) {
 async function loadVideoSignals(file: File) {
   status(t('status.motion', { p: 0 }));
   try {
-    const m = await analyzeMotion(file, (f) => status(t('status.motion', { p: Math.round(f * 100) })));
+    const m = await analyzeMotion(file, (f) => S.videoFile === file && status(t('status.motion', { p: Math.round(f * 100) })));
     if (S.videoFile !== file) return;
     // 30fps を 50Hz で取り出すと重複フレームの差分が 0 になりギザギザになるので、表示用に隣と max を取る
     S.motion = Float32Array.from(m, (v, i) => Math.max(v, m[i + 1] ?? v));
@@ -191,6 +197,7 @@ async function loadVideoSignals(file: File) {
     S.dirty = true;
     status('');
   } catch (e) {
+    if (S.videoFile !== file) return;
     status('');
     toast(t('err.motion', { msg: e instanceof Error ? e.message : String(e) }), 'error');
   }
@@ -199,7 +206,7 @@ async function loadVideoSignals(file: File) {
 async function loadAudioSignals(file: File) {
   status(t('status.beats', { p: 0 }));
   try {
-    const r = await analyzeAudio(file, (f) => status(t('status.beats', { p: Math.round(f * 100) })));
+    const r = await analyzeAudio(file, (f) => S.audioFile === file && status(t('status.beats', { p: Math.round(f * 100) })));
     if (S.audioFile !== file) return;
     S.onset = r.onset;
     S.beats = r.beats;
@@ -209,6 +216,7 @@ async function loadAudioSignals(file: File) {
     updatePanels();
     status('');
   } catch (e) {
+    if (S.audioFile !== file) return;
     status('');
     toast(t('err.beats', { msg: e instanceof Error ? e.message : String(e) }), 'error');
   }
@@ -367,7 +375,18 @@ export async function renderRecent() {
       b.className = 't';
       const trim = r.p.trim.start_ms != null && r.p.trim.end_ms != null ? fmt((r.p.trim.end_ms - r.p.trim.start_ms) / 1000) : '';
       b.textContent = `${new Date(r.updated).toLocaleString()}  ${trim}`;
-      d.append(a, b);
+      const del = document.createElement('button');
+      del.className = 'itemDel';
+      del.textContent = '×';
+      del.title = t('recent.delete');
+      del.onclick = async (e) => {
+        e.stopPropagation();
+        const ok = await modal(t('recent.confirmDelete', { name: r.videoName }), [[t('btn.cancel'), false], [t('recent.delete'), true, 'accent']]);
+        if (!ok) return;
+        await deleteProject(r.key).catch(() => {});
+        renderRecent();
+      };
+      d.append(del, a, b);
       d.onclick = () => {
         $('#recentMenu').classList.remove('open');
         openRecent(r);

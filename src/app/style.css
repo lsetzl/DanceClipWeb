@@ -52,6 +52,8 @@ a { color: #9ab8d8; }
 .menu .item, #welcomeRecent .item { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #2c313c; overflow-wrap: anywhere; }
 .menu .item:hover, #welcomeRecent .item:hover { background: #2f3542; }
 .item .t { font-size: 11px; color: var(--dim); }
+.itemDel { float: right; padding: 0 8px; margin-left: 8px; background: transparent; border-color: transparent; color: var(--dim); }
+.itemDel:hover { color: var(--danger); }
 #supportWarn { background: #4a2626; color: #ffd2d2; padding: 6px 12px; border-bottom: 1px solid #7a3a3a; }
 
 #main { display: grid; grid-template-columns: 1fr 290px; min-height: 0; }
@@ -66,6 +68,8 @@ a { color: #9ab8d8; }
 body.dragging #welcome { border-color: var(--accent); }
 #welcome h1 { color: var(--text); font-size: 20px; font-weight: 600; margin: 0; }
 #welcome p { margin: 4px 0; max-width: 560px; }
+.steps { text-align: left; max-width: 560px; margin: 6px 0; padding-left: 1.4em; line-height: 1.6; }
+#welcome .steps { color: var(--text); }
 .welcomeRecentHead { margin-top: 10px; }
 #welcomeRecent { width: min(560px, 100%); text-align: left; background: var(--panel); border-radius: 6px; max-height: 40%; overflow: auto; }
 #loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; background: #000a; }
