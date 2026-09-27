@@ -2,8 +2,8 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeF
 import { resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 
-const OUT_DIR = resolve(__dirname, 'poc-out');
-const ROOTS_FILE = resolve(__dirname, 'test-roots.local.json');
+const OUT_DIR = resolve(import.meta.dirname, 'poc-out');
+const ROOTS_FILE = resolve(import.meta.dirname, 'test-roots.local.json');
 
 // 計測用に dev サーバーから読ませてよいフォルダ。test-roots.local.json(git 管理外)に絶対パスの配列で書く
 function testRoots(): string[] {
@@ -57,13 +57,25 @@ function localTestFiles(): Plugin {
   };
 }
 
+// Service Worker がインストール時にキャッシュする、ビルド結果のファイル一覧(ハッシュ付きの名前は毎回変わる)
+function precacheList(): Plugin {
+  return {
+    name: 'precache-list',
+    apply: 'build',
+    generateBundle(_, bundle) {
+      const files = Object.keys(bundle).filter((f) => !f.endsWith('.map') && f !== 'poc.html');
+      this.emitFile({ type: 'asset', fileName: 'precache.json', source: JSON.stringify(files) });
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [localTestFiles()],
+  plugins: [localTestFiles(), precacheList()],
   worker: { format: 'es' },
   build: {
     rollupOptions: {
-      input: { main: resolve(__dirname, 'index.html'), poc: resolve(__dirname, 'poc.html') },
+      input: { main: resolve(import.meta.dirname, 'index.html'), poc: resolve(import.meta.dirname, 'poc.html') },
     },
   },
 });

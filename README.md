@@ -51,7 +51,10 @@ npm run dev
 | `src/dsp/` | 解析。librosa の onset / tempo / beat_track、scipy の butter + sosfiltfilt、ffmpeg のリサンプラーの移植 |
 | `src/analysis/` | 解析用の Web Worker と、IndexedDB へのキャッシュ |
 | `poc.html` | 書き出しだけを試す診断ページ(AAC エンコーダーの遅延、出力遅延の表示) |
-| `tests/dsp-compare.ts` | デスクトップ版(Python)の解析結果との突き合わせ(`npx tsx tests/dsp-compare.ts <name> [song]`) |
+| `tests/dsp.test.ts` | 解析のテスト(`npm test`、CI でも実行)。合成信号に対するデスクトップ版(librosa / scipy / ffmpeg)の結果と一致するかを確かめる。正解データは `tools/make_fixtures.py` で作る |
+| `tests/dsp-compare.ts` | 実際の曲でのデスクトップ版との突き合わせ(手元用。`npx tsx tests/dsp-compare.ts <name> [song]`) |
+| `public/sw.js` | オフライン用の Service Worker。キャッシュするファイルの一覧はビルド時に `precache.json` として作る |
+| `tools/make_icons.py` | アイコンと SNS 共有用の画像を作る |
 | `tools/` | 書き出し結果の比較(音ズレ、SSIM)、デスクトップ版の解析結果の書き出し |
 
 計測用の `/__test` エンドポイントと `window.dcTest` は dev サーバー専用で、ビルドには含まれません。手元のファイルを読ませるフォルダは `test-roots.local.json`(git 管理外、絶対パスの配列)に書きます。

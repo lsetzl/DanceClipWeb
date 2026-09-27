@@ -239,6 +239,10 @@ applyI18n();
 updateSourceInfo();
 wire();
 renderRecent();
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 checkSupport().then((msg) => {
   if (!msg) return;
   $('#supportWarn').textContent = msg;
